@@ -101,6 +101,18 @@ function App() {
     }));
   };
 
+  const copyJSON = () => {
+    navigator.clipboard.writeText(
+      JSON.stringify(
+        expensesList.map(({ title, amount, paidBy }) => ({
+          title,
+          amount,
+          paidBy,
+        })),
+      ),
+    );
+  };
+
   return (
     <div
       style={{
@@ -143,7 +155,7 @@ function App() {
                   width: 'fit-content',
                   padding: '8px',
                   margin: 'auto',
-                  marginBottom: "30px"
+                  marginBottom: '30px',
                 }}
                 type='button'
                 onClick={() => setAddViewFlag(false)}
@@ -495,6 +507,17 @@ function App() {
                   </tfoot>
                 </table>
               </div>
+              <button
+                style={{
+                  width: 'fit-content',
+                  padding: '8px',
+                  margin: 'auto',
+                  marginTop: '30px',
+                }}
+                onClick={copyJSON}
+              >
+                Copy JSON
+              </button>
             </section>
           )}
         </div>
