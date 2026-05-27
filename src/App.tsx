@@ -1,14 +1,36 @@
 import { useState, useEffect } from 'react';
+import { initializeApp } from 'firebase/app';
+import { 
+  getFirestore, 
+  collection, 
+  addDoc, 
+  onSnapshot, 
+  query, 
+  orderBy, 
+} from 'firebase/firestore';
 import './App.css';
-import { OLD_EXPENSES } from './state';
 
 type Expense = {
+  id?: string;
   title: string;
   type: string;
   amount: number;
   date: string;
   paidBy: string;
 };
+
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 const PEERS = [
   { name: 'Manjula', id: 'manjula' },
@@ -22,32 +44,31 @@ const EXPENSE_TYPES = [
   { title: 'Others', id: 'othes' },
 ];
 
-function useLocalStorage<T>(
-  key: string,
-  initialValue: T,
-): [T, React.Dispatch<React.SetStateAction<T>>] {
-  const [storedValue, setStoredValue] = useState<T>(() => {
-    try {
-      const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) : initialValue;
-    } catch (error) {
-      console.error('Error reading localStorage key “' + key + '”: ', error);
-      return initialValue;
-    }
-  });
+function App() {
+  const [expensesList, setExpensesList] = useState<Expense[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    window.localStorage.setItem(key, JSON.stringify(storedValue));
-  }, [key, storedValue]);
+    if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+      console.error("Firebase configuration is missing! Ensure .env is set up and RESTART your dev server.");
+      setIsLoading(false);
+      return;
+    }
 
-  return [storedValue, setStoredValue];
-}
-
-function App() {
-  const [expensesList, setExpensesList] = useLocalStorage<Expense[]>(
-    'expenses_data',
-    OLD_EXPENSES,
-  );
+    const q = query(collection(db, 'expenses'), orderBy('date', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const expenses = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Expense[];
+      setExpensesList(expenses);
+      setIsLoading(false);
+    }, (error) => {
+      console.error("Firestore listener error:", error);
+      setIsLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const [formValues, setFormValues] = useState<Expense>({
     title: '',
@@ -78,9 +99,13 @@ function App() {
     formValues.amount > 0 &&
     formValues.date !== '';
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setExpensesList([...expensesList, formValues]);
+    try {
+      await addDoc(collection(db, 'expenses'), formValues);
+    } catch (error) {
+      console.error("Error adding document: ", error);
+    }
     // Reset form after submission
     setFormValues({
       title: '',
@@ -99,18 +124,6 @@ function App() {
       ...prev,
       [name]: name === 'amount' ? Number(value) : value,
     }));
-  };
-
-  const copyJSON = () => {
-    navigator.clipboard.writeText(
-      JSON.stringify(
-        expensesList.map(({ title, amount, paidBy }) => ({
-          title,
-          amount,
-          paidBy,
-        })),
-      ),
-    );
   };
 
   return (
@@ -136,16 +149,17 @@ function App() {
           }}
         >
           {!addView && (
-            <button
-              style={{
-                width: 'fit-content',
-                padding: '8px',
-                margin: 'auto',
-              }}
-              onClick={() => setAddViewFlag(true)}
-            >
-              Add expense
-            </button>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button
+                style={{
+                  width: 'fit-content',
+                  padding: '8px',
+                }}
+                onClick={() => setAddViewFlag(true)}
+              >
+                Add expense
+              </button>
+            </div>
           )}
 
           {addView ? (
@@ -378,7 +392,10 @@ function App() {
                 </div>
               </div>
 
-              <div
+              {isLoading ? (
+                <p style={{ textAlign: 'center', marginTop: '40px' }}>Loading data from Firebase...</p>
+              ) : (
+                <div
                 style={{
                   overflowX: 'auto',
                   marginTop: '20px',
@@ -441,8 +458,8 @@ function App() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredExpenses.map((expense, index) => (
-                      <tr key={index}>
+                    {filteredExpenses.map((expense) => (
+                      <tr key={expense.id}>
                         <td
                           style={{
                             border: '1px solid #ddd',
@@ -507,17 +524,7 @@ function App() {
                   </tfoot>
                 </table>
               </div>
-              <button
-                style={{
-                  width: 'fit-content',
-                  padding: '8px',
-                  margin: 'auto',
-                  marginTop: '30px',
-                }}
-                onClick={copyJSON}
-              >
-                Copy JSON
-              </button>
+              )}
             </section>
           )}
         </div>
