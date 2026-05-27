@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
-import { 
-  getFirestore, 
-  collection, 
-  addDoc, 
-  onSnapshot, 
-  query, 
-  orderBy, 
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  onSnapshot,
+  query,
+  orderBy,
 } from 'firebase/firestore';
 import './App.css';
 
@@ -26,7 +26,7 @@ const firebaseConfig = {
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 const app = initializeApp(firebaseConfig);
@@ -50,23 +50,29 @@ function App() {
 
   useEffect(() => {
     if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-      console.error("Firebase configuration is missing! Ensure .env is set up and RESTART your dev server.");
+      console.error(
+        'Firebase configuration is missing! Ensure .env is set up and RESTART your dev server.',
+      );
       setIsLoading(false);
       return;
     }
 
     const q = query(collection(db, 'expenses'), orderBy('date', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const expenses = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Expense[];
-      setExpensesList(expenses);
-      setIsLoading(false);
-    }, (error) => {
-      console.error("Firestore listener error:", error);
-      setIsLoading(false);
-    });
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const expenses = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Expense[];
+        setExpensesList(expenses);
+        setIsLoading(false);
+      },
+      (error) => {
+        console.error('Firestore listener error:', error);
+        setIsLoading(false);
+      },
+    );
     return () => unsubscribe();
   }, []);
 
@@ -103,8 +109,9 @@ function App() {
     e.preventDefault();
     try {
       await addDoc(collection(db, 'expenses'), formValues);
+      setAddViewFlag(false);
     } catch (error) {
-      console.error("Error adding document: ", error);
+      console.error('Error adding document: ', error);
     }
     // Reset form after submission
     setFormValues({
@@ -149,7 +156,9 @@ function App() {
           }}
         >
           {!addView && (
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+            <div
+              style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}
+            >
               <button
                 style={{
                   width: 'fit-content',
@@ -393,137 +402,152 @@ function App() {
               </div>
 
               {isLoading ? (
-                <p style={{ textAlign: 'center', marginTop: '40px' }}>Loading data from Firebase...</p>
+                <p style={{ textAlign: 'center', marginTop: '40px' }}>
+                  Loading data from Firebase...
+                </p>
               ) : (
                 <div
-                style={{
-                  overflowX: 'auto',
-                  marginTop: '20px',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                }}
-              >
-                <table
                   style={{
-                    width: '100%',
-                    borderCollapse: 'collapse',
-                    minWidth: '700px',
+                    overflowX: 'auto',
+                    marginTop: '20px',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
                   }}
                 >
-                  <thead>
-                    <tr style={{ backgroundColor: '#f2f2f2' }}>
-                      <th
-                        style={{
-                          border: '1px solid #ddd',
-                          textAlign: 'left',
-                          padding: '10px',
-                          color: 'black',
-                        }}
-                      >
-                        Title
-                      </th>
-                      <th
-                        style={{
-                          border: '1px solid #ddd',
-                          textAlign: 'left',
-                          padding: '10px',
-                          width: '150px',
-                          color: 'black',
-                        }}
-                      >
-                        Amount
-                      </th>
-                      <th
-                        style={{
-                          border: '1px solid #ddd',
-                          textAlign: 'left',
-                          padding: '10px',
-                          width: '120px',
-                          color: 'black',
-                        }}
-                      >
-                        Type
-                      </th>
-                      <th
-                        style={{
-                          border: '1px solid #ddd',
-                          textAlign: 'left',
-                          padding: '10px',
-                          width: '120px',
-                          color: 'black',
-                        }}
-                      >
-                        Paid By
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredExpenses.map((expense) => (
-                      <tr key={expense.id}>
+                  <table
+                    style={{
+                      width: '100%',
+                      borderCollapse: 'collapse',
+                      minWidth: '700px',
+                    }}
+                  >
+                    <thead>
+                      <tr style={{ backgroundColor: '#f2f2f2' }}>
+                        <th
+                          style={{
+                            border: '1px solid #ddd',
+                            textAlign: 'left',
+                            padding: '10px',
+                            color: 'black',
+                          }}
+                        >
+                          Title
+                        </th>
+                        <th
+                          style={{
+                            border: '1px solid #ddd',
+                            textAlign: 'left',
+                            padding: '10px',
+                            width: '150px',
+                            color: 'black',
+                          }}
+                        >
+                          Amount
+                        </th>
+                        <th
+                          style={{
+                            border: '1px solid #ddd',
+                            textAlign: 'left',
+                            padding: '10px',
+                            width: '120px',
+                            color: 'black',
+                          }}
+                        >
+                          Type
+                        </th>
+                        <th
+                          style={{
+                            border: '1px solid #ddd',
+                            textAlign: 'left',
+                            padding: '10px',
+                            width: '120px',
+                            color: 'black',
+                          }}
+                        >
+                          Paid By
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredExpenses.map((expense) => (
+                        <tr key={expense.id}>
+                          <td
+                            style={{
+                              border: '1px solid #ddd',
+                              wordBreak: 'break-word',
+                              padding: '10px',
+                              cursor: 'pointer',
+                            }}
+                            onClick={() =>
+                              navigator.clipboard.writeText(expense.id)
+                            }
+                          >
+                            {expense.title}
+                          </td>
+                          <td
+                            style={{
+                              border: '1px solid #ddd',
+                              padding: '10px',
+                            }}
+                          >
+                            ₹{expense.amount.toLocaleString('en-IN')}
+                          </td>
+                          <td
+                            style={{
+                              border: '1px solid #ddd',
+                              padding: '10px',
+                            }}
+                          >
+                            {EXPENSE_TYPES.find((t) => t.id === expense.type)
+                              ?.title || expense.type}
+                          </td>
+                          <td
+                            style={{
+                              border: '1px solid #ddd',
+                              padding: '10px',
+                            }}
+                          >
+                            {PEERS.find((p) => p.id === expense.paidBy)?.name ||
+                              expense.paidBy}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot
+                      style={{ fontWeight: 'bold', backgroundColor: '#f2f2f2' }}
+                    >
+                      <tr>
                         <td
                           style={{
                             border: '1px solid #ddd',
-                            wordBreak: 'break-word',
                             padding: '10px',
+                            textAlign: 'right',
+                            color: 'black',
                           }}
                         >
-                          {expense.title}
+                          Total Expense
                         </td>
                         <td
-                          style={{ border: '1px solid #ddd', padding: '10px' }}
+                          style={{
+                            border: '1px solid #ddd',
+                            padding: '10px',
+                            color: 'black',
+                          }}
                         >
-                          ₹{expense.amount.toLocaleString('en-IN')}
+                          ₹{totalAmount.toLocaleString('en-IN')}
                         </td>
                         <td
-                          style={{ border: '1px solid #ddd', padding: '10px' }}
-                        >
-                          {EXPENSE_TYPES.find((t) => t.id === expense.type)
-                            ?.title || expense.type}
-                        </td>
-                        <td
-                          style={{ border: '1px solid #ddd', padding: '10px' }}
-                        >
-                          {PEERS.find((p) => p.id === expense.paidBy)?.name ||
-                            expense.paidBy}
-                        </td>
+                          colSpan={2}
+                          style={{
+                            border: '1px solid #ddd',
+                            padding: '10px',
+                            color: 'black',
+                          }}
+                        ></td>
                       </tr>
-                    ))}
-                  </tbody>
-                  <tfoot
-                    style={{ fontWeight: 'bold', backgroundColor: '#f2f2f2' }}
-                  >
-                    <tr>
-                      <td
-                        style={{
-                          border: '1px solid #ddd',
-                          padding: '10px',
-                          textAlign: 'right',
-                          color: 'black',
-                        }}
-                      >
-                        Total Expense
-                      </td>
-                      <td
-                        style={{
-                          border: '1px solid #ddd',
-                          padding: '10px',
-                          color: 'black',
-                        }}
-                      >
-                        ₹{totalAmount.toLocaleString('en-IN')}
-                      </td>
-                      <td
-                        colSpan={2}
-                        style={{
-                          border: '1px solid #ddd',
-                          padding: '10px',
-                          color: 'black',
-                        }}
-                      ></td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
+                    </tfoot>
+                  </table>
+                </div>
               )}
             </section>
           )}
