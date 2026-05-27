@@ -479,7 +479,7 @@ function App() {
                               cursor: 'pointer',
                             }}
                             onClick={() =>
-                              navigator.clipboard.writeText(expense.id)
+                              navigator.clipboard.writeText(expense.id ?? "")
                             }
                           >
                             {expense.title}
